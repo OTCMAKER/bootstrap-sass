@@ -1,4 +1,4 @@
-require 'capybara/dsl'
+require 'capybara'
 require 'fileutils'
 module DummyRailsIntegration
   include Capybara::DSL

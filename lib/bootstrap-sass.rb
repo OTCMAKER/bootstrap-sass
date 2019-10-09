@@ -1,4 +1,3 @@
-require 'bootstrap-sass/version'
 module Bootstrap
   class << self
     # Inspired by Kaminari
@@ -7,19 +6,9 @@ module Bootstrap
 
       if rails?
         register_rails_engine
-      elsif hanami?
-        register_hanami
-      elsif sprockets?
-        register_sprockets
-      elsif defined?(::Sass) && ::Sass.respond_to?(:load_paths)
-        # The deprecated `sass` gem:
-        ::Sass.load_paths << stylesheets_path
       end
 
-      if defined?(::Sass::Script::Value::Number)
-        # bootstrap requires minimum precision of 8, see https://github.com/twbs/bootstrap-sass/issues/409
-        ::Sass::Script::Value::Number.precision = [8, ::Sass::Script::Value::Number.precision].max
-      end
+      configure_sass
     end
 
     # Paths
@@ -44,28 +33,32 @@ module Bootstrap
     end
 
     # Environment detection helpers
-    def sprockets?
+    def asset_pipeline?
       defined?(::Sprockets)
     end
 
     def compass?
-      defined?(::Compass::Frameworks)
+      defined?(::Compass)
     end
 
     def rails?
       defined?(::Rails)
     end
 
-    def hanami?
-      defined?(::Hanami)
-    end
-
     private
+
+    def configure_sass
+      require 'sass'
+
+      ::Sass.load_paths << stylesheets_path
+
+      # bootstrap requires minimum precision of 10, see https://github.com/twbs/bootstrap-sass/issues/409
+      ::Sass::Script::Number.precision = [10, ::Sass::Script::Number.precision].max
+    end
 
     def register_compass_extension
       ::Compass::Frameworks.register(
           'bootstrap',
-          :version               => Bootstrap::VERSION,
           :path                  => gem_path,
           :stylesheets_directory => stylesheets_path,
           :templates_directory   => File.join(gem_path, 'templates')
@@ -74,16 +67,6 @@ module Bootstrap
 
     def register_rails_engine
       require 'bootstrap-sass/engine'
-    end
-
-    def register_hanami
-      Hanami::Assets.sources << assets_path
-    end
-
-    def register_sprockets
-      Sprockets.append_path(stylesheets_path)
-      Sprockets.append_path(fonts_path)
-      Sprockets.append_path(javascripts_path)
     end
   end
 end
